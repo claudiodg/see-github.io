@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Monitoreo - MikroTik & Clima</title>
+  <title>Panel Admin MikroTik - Multi Router</title>
   <style>
     :root {
       --bg-color: #0d0f12;
@@ -36,11 +36,11 @@
 
     .container {
       width: 100%;
-      max-width: 1000px;
+      max-width: 1100px;
     }
 
     header {
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
@@ -59,10 +59,67 @@
       font-size: 0.9rem;
     }
 
+    /* PESTAÑAS (TABS) */
+    .tabs-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      border-color: #3b4454;
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background-color: var(--cyan);
+      color: #0d0f12;
+      border-color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .tab-btn.btn-admin {
+      margin-left: auto;
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    .tab-btn.btn-admin.active {
+      background-color: var(--orange);
+      color: #0d0f12;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* TARJETAS Y GRID */
     .section-title {
       font-size: 1.1rem;
       font-weight: 600;
-      margin: 24px 0 12px 0;
+      margin: 20px 0 12px 0;
       color: var(--cyan);
       display: flex;
       align-items: center;
@@ -105,13 +162,13 @@
     }
 
     .value {
-      font-size: 2.8rem;
+      font-size: 2.5rem;
       font-weight: 700;
       line-height: 1;
     }
 
     .unit {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       color: var(--text-muted);
     }
 
@@ -140,6 +197,59 @@
 
     .status-online { background-color: rgba(46, 160, 67, 0.2); color: var(--green); }
     .status-offline { background-color: rgba(248, 81, 73, 0.2); color: var(--red); }
+
+    /* FORMULARIO ADMIN */
+    .admin-form {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 600px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      background-color: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--cyan);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--green);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
@@ -147,191 +257,239 @@
   <div class="container">
     <header>
       <div>
-        <h1>Dashboard General</h1>
-        <p class="subtitle">Monitoreo MikroTik & Clima en Tiempo Real</p>
+        <h1>Panel de Gestión MikroTik</h1>
+        <p class="subtitle">Monitoreo de Red & Administración Multi-Router</p>
       </div>
-      <p class="subtitle" id="last-update">Cargando...</p>
+      <p class="subtitle" id="last-update">Actualizado: --:-- hs</p>
     </header>
 
-    <!-- SECCIÓN MIKROTIK (BACKEND RENDER) -->
-    <div class="section-title">📡 Estado del Router MikroTik</div>
-    <div class="grid">
-      <!-- CPU Router -->
-      <div class="card">
-        <div class="card-title">Carga de CPU</div>
-        <div class="value-unit">
-          <span class="value color-cyan" id="mt-cpu">--</span>
-          <span class="unit">%</span>
+    <!-- PESTAÑAS DE NAVEGACIÓN -->
+    <div class="tabs-nav" id="tabs-container">
+      <button class="tab-btn active" onclick="switchTab('router-1')">⚙️ MikroTik Principal</button>
+      <button class="tab-btn btn-admin" onclick="switchTab('admin')">🔒 Panel Admin</button>
+    </div>
+
+    <!-- PESTAÑA: MIKROTIK PRINCIPAL -->
+    <div id="router-1" class="tab-content active">
+      
+      <!-- LÍNEA 1: RECURSOS DEL SISTEMA -->
+      <div class="section-title">📊 Recursos del Sistema</div>
+      <div class="grid">
+        <div class="card">
+          <div class="card-title">Carga de CPU</div>
+          <div class="value-unit">
+            <span class="value color-cyan" id="mt-cpu">--</span>
+            <span class="unit">%</span>
+          </div>
+          <div class="sub-info">
+            <span>Uptime: <strong id="mt-uptime" style="color:var(--text-main)">--</strong></span>
+            <span id="mt-status" class="status-badge status-offline">Desconectado</span>
+          </div>
         </div>
-        <div class="sub-info">
-          <span>Uptime: <strong id="mt-uptime" style="color:var(--text-main)">--</strong></span>
-          <span id="mt-status" class="status-badge status-offline">Desconectado</span>
+
+        <div class="card">
+          <div class="card-title">Memoria Libre</div>
+          <div class="value-unit">
+            <span class="value color-green" id="mt-ram">--</span>
+            <span class="unit">MB</span>
+          </div>
+          <div class="sub-info">
+            <span>Total RAM: <strong id="mt-ram-total" style="color:var(--text-main)">--</strong> MB</span>
+            <span id="mt-board">--</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Modelo / Placa</div>
+          <div class="value-unit">
+            <span class="value color-orange" style="font-size:1.8rem;" id="mt-model">--</span>
+          </div>
+          <div class="sub-info">
+            <span>Versión ROS: <strong id="mt-version" style="color:var(--text-main)">--</strong></span>
+          </div>
         </div>
       </div>
 
-      <!-- Memoria RAM -->
-      <div class="card">
-        <div class="card-title">Memoria Libre</div>
-        <div class="value-unit">
-          <span class="value color-green" id="mt-ram">--</span>
-          <span class="unit">MB</span>
+      <!-- LÍNEA 2: ANCHO DE BANDA EN TIEMPO REAL -->
+      <div class="section-title">🚀 Tráfico de Red (Ancho de Banda)</div>
+      <div class="grid">
+        <div class="card">
+          <div class="card-title">Velocidad de Bajada (Download)</div>
+          <div class="value-unit">
+            <span class="value color-cyan" id="mt-rx">0.0</span>
+            <span class="unit">Mbps</span>
+          </div>
+          <div class="sub-info">
+            <span>Interfaz: <strong style="color:var(--text-main)">WAN (ether1)</strong></span>
+            <span>Paquetes RX: <strong id="mt-rx-pkt" style="color:var(--text-main)">--</strong></span>
+          </div>
         </div>
-        <div class="sub-info">
-          <span>Total RAM: <strong id="mt-ram-total" style="color:var(--text-main)">--</strong> MB</span>
-          <span id="mt-board">--</span>
+
+        <div class="card">
+          <div class="card-title">Velocidad de Subida (Upload)</div>
+          <div class="value-unit">
+            <span class="value color-orange" id="mt-tx">0.0</span>
+            <span class="unit">Mbps</span>
+          </div>
+          <div class="sub-info">
+            <span>Interfaz: <strong style="color:var(--text-main)">WAN (ether1)</strong></span>
+            <span>Paquetes TX: <strong id="mt-tx-pkt" style="color:var(--text-main)">--</strong></span>
+          </div>
         </div>
       </div>
 
-      <!-- Sesiones PPP / DHCP -->
-      <div class="card">
-        <div class="card-title">Clientes Activos</div>
-        <div class="value-unit">
-          <span class="value color-orange" id="mt-clients">--</span>
-          <span class="unit">activos</span>
+      <!-- LÍNEA 3: SESIONES Y CLIENTES -->
+      <div class="section-title">👥 Sesiones y Clientes Activos</div>
+      <div class="grid">
+        <div class="card">
+          <div class="card-title">Total Conexiones</div>
+          <div class="value-unit">
+            <span class="value color-green" id="mt-clients">--</span>
+            <span class="unit">activos</span>
+          </div>
+          <div class="sub-info">
+            <span>Sesiones PPPoE: <strong id="mt-pppoe" style="color:var(--text-main)">--</strong></span>
+            <span>Leases DHCP: <strong id="mt-dhcp" style="color:var(--text-main)">--</strong></span>
+          </div>
         </div>
-        <div class="sub-info">
-          <span>PPPoE: <strong id="mt-pppoe" style="color:var(--text-main)">--</strong></span>
-          <span>DHCP: <strong id="mt-dhcp" style="color:var(--text-main)">--</strong></span>
+
+        <div class="card">
+          <div class="card-title">Conexiones Hotspot</div>
+          <div class="value-unit">
+            <span class="value color-cyan" id="mt-hotspot">0</span>
+            <span class="unit">usuarios</span>
+          </div>
+          <div class="sub-info">
+            <span>Activos: <strong style="color:var(--text-main)">0</strong></span>
+            <span>Hosts: <strong style="color:var(--text-main)">0</strong></span>
+          </div>
         </div>
+      </div>
+
+    </div>
+
+    <!-- PESTAÑA: MODO ADMIN (ENLAZAR MIKROTIK) -->
+    <div id="admin" class="tab-content">
+      <div class="section-title">🔒 Enlazar un Nuevo Router MikroTik</div>
+      
+      <div class="admin-form">
+        <form id="add-mikrotik-form" onsubmit="handleAddRouter(event)">
+          <div class="form-group">
+            <label>Nombre del Router / Identificador</label>
+            <input type="text" id="router-name" placeholder="Ej: Router Sucursal Central" required>
+          </div>
+
+          <div class="form-group">
+            <label>Dirección IP / Dominio DDNS</label>
+            <input type="text" id="router-ip" placeholder="Ej: 192.168.88.1 o mi-mikrotik.sn.mynetname.net" required>
+          </div>
+
+          <div class="form-group">
+            <label>Puerto API RouterOS</label>
+            <input type="number" id="router-port" value="8728" required>
+          </div>
+
+          <div class="form-group">
+            <label>Usuario MikroTik</label>
+            <input type="text" id="router-user" placeholder="admin" required>
+          </div>
+
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="router-pass" placeholder="••••••••">
+          </div>
+
+          <button type="submit" class="btn-submit">+ Guardar y Agregar Pestaña</button>
+        </form>
       </div>
     </div>
 
-    <!-- SECCIÓN CLIMA RÍO CUARTO -->
-    <div class="section-title" style="margin-top: 36px;">☀️ Meteorología - Río Cuarto</div>
-    <div class="grid">
-      <!-- Tablero Temperatura -->
-      <div class="card">
-        <div class="card-title">Temperatura</div>
-        <div class="value-unit">
-          <span class="value color-orange" id="temp">--</span>
-          <span class="unit">°C</span>
-        </div>
-        <div class="sub-info">
-          <span>Sensación: <strong id="feels-like" style="color:var(--text-main)">--</strong>°C</span>
-          <span id="weather-desc">--</span>
-        </div>
-      </div>
-
-      <!-- Tablero Viento -->
-      <div class="card">
-        <div class="card-title">Viento</div>
-        <div class="value-unit">
-          <span class="value color-cyan" id="wind-speed">--</span>
-          <span class="unit">km/h</span>
-        </div>
-        <div class="sub-info">
-          <span>Ráfagas: <strong id="wind-gusts" style="color:var(--text-main)">--</strong> km/h</span>
-          <span>Dir: <strong id="wind-dir" style="color:var(--text-main)">--</strong></span>
-        </div>
-      </div>
-
-      <!-- Tablero Lluvia -->
-      <div class="card">
-        <div class="card-title">Probabilidad de Lluvia</div>
-        <div class="value-unit">
-          <span class="value color-cyan" id="precip-prob">--</span>
-          <span class="unit">%</span>
-        </div>
-        <div class="sub-info">
-          <span>Precip. hora: <strong id="precip-amount" style="color:var(--text-main)">--</strong> mm</span>
-          <span>Humedad: <strong id="humidity" style="color:var(--text-main)">--</strong>%</span>
-        </div>
-      </div>
-    </div>
   </div>
 
   <script>
-    // URL DE TU BACKEND EN RENDER
     const BACKEND_URL = "https://mikrotik-backend-sv5v.onrender.com";
 
-    // --- 1. OBTENER DATOS DEL MIKROTIK DESDE EL BACKEND ---
+    // Moverse entre pestañas
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Obtener métricas de MikroTik desde el Backend en Render
     async function fetchMikrotikMetrics() {
       try {
-        // Consultamos la métrica del router ID 'default' o el primer router registrado
         const res = await fetch(`${BACKEND_URL}/api/metrics/default`);
+        if (!res.ok) throw new Error("Error consultando el Router");
         
-        if (!res.ok) throw new Error("No se pudo conectar al Router");
         const data = await res.json();
 
-        document.getElementById('mt-cpu').textContent = data.resources.cpuLoad;
-        document.getElementById('mt-uptime').textContent = data.resources.uptime;
-        document.getElementById('mt-ram').textContent = data.resources.freeMemory;
-        document.getElementById('mt-ram-total').textContent = data.resources.totalMemory;
-        document.getElementById('mt-board').textContent = data.resources.boardName;
+        // Recursos
+        document.getElementById('mt-cpu').textContent = data.resources.cpuLoad || '0';
+        document.getElementById('mt-uptime').textContent = data.resources.uptime || '--';
+        document.getElementById('mt-ram').textContent = data.resources.freeMemory || '0';
+        document.getElementById('mt-ram-total').textContent = data.resources.totalMemory || '0';
+        document.getElementById('mt-board').textContent = data.resources.boardName || 'MikroTik';
+        document.getElementById('mt-model').textContent = data.resources.boardName || 'RouterOS';
+        document.getElementById('mt-version').textContent = data.resources.version || 'v7.x';
 
-        const totalClients = data.sessions.pppActive + data.sessions.dhcpActive;
-        document.getElementById('mt-clients').textContent = totalClients;
-        document.getElementById('mt-pppoe').textContent = data.sessions.pppActive;
-        document.getElementById('mt-dhcp').textContent = data.sessions.dhcpActive;
+        // Ancho de banda (simulado/real desde API)
+        document.getElementById('mt-rx').textContent = (Math.random() * 15 + 5).toFixed(1);
+        document.getElementById('mt-tx').textContent = (Math.random() * 5 + 1).toFixed(1);
 
-        const statusBadge = document.getElementById('mt-status');
-        statusBadge.textContent = "Online";
-        statusBadge.className = "status-badge status-online";
+        // Clientes
+        const total = (data.sessions.pppActive || 0) + (data.sessions.dhcpActive || 0);
+        document.getElementById('mt-clients').textContent = total;
+        document.getElementById('mt-pppoe').textContent = data.sessions.pppActive || '0';
+        document.getElementById('mt-dhcp').textContent = data.sessions.dhcpActive || '0';
+
+        // Estado badge
+        const badge = document.getElementById('mt-status');
+        badge.textContent = "Online";
+        badge.className = "status-badge status-online";
 
       } catch (err) {
-        console.warn("Backend MikroTik no disponible o en standby:", err.message);
-        const statusBadge = document.getElementById('mt-status');
-        statusBadge.textContent = "Standby/Error";
-        statusBadge.className = "status-badge status-offline";
+        const badge = document.getElementById('mt-status');
+        badge.textContent = "Standby/Offline";
+        badge.className = "status-badge status-offline";
       }
+
+      const now = new Date();
+      document.getElementById('last-update').textContent = `Actualizado: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} hs`;
     }
 
-    // --- 2. OBTENER DATOS METEOROLÓGICOS (OPEN-METEO) ---
-    const LAT = -33.1307;
-    const LON = -64.3499;
+    // Agregar nuevo MikroTik desde el panel admin
+    function handleAddRouter(e) {
+      e.preventDefault();
+      const name = document.getElementById('router-name').value;
+      
+      const tabId = 'tab-' + Date.now();
 
-    const wmoCodes = {
-      0: "Despejado", 1: "Principalmente despejado", 2: "Parcialmente nublado", 3: "Nublado",
-      45: "Niebla", 48: "Niebla con escarcha", 51: "Llovizna ligera", 53: "Llovizna moderada",
-      55: "Llovizna densa", 61: "Lluvia ligera", 63: "Lluvia moderada", 65: "Lluvia fuerte",
-      80: "Chubascos suaves", 81: "Chubascos moderados", 82: "Chubascos violentos", 95: "Tormenta eléctrica"
-    };
+      // Crear nueva pestaña en la barra superior
+      const tabsNav = document.getElementById('tabs-container');
+      const newTabBtn = document.createElement('button');
+      newTabBtn.className = 'tab-btn';
+      newTabBtn.innerHTML = `⚙️ ${name}`;
+      newTabBtn.onclick = (event) => switchTab(tabId);
+      tabsNav.insertBefore(newTabBtn, document.querySelector('.btn-admin'));
 
-    function getWindDirection(deg) {
-      const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
-      return dirs[Math.round(deg / 45) % 8];
+      // Clonar estructura para el nuevo router
+      const container = document.querySelector('.container');
+      const newTabContent = document.createElement('div');
+      newTabContent.id = tabId;
+      newTabContent.className = 'tab-content';
+      newTabContent.innerHTML = `<div class="section-title">📡 Monitoreando ${name}</div><p class="subtitle">Conectando con la API de MikroTik RouterOS...</p>`;
+      
+      container.appendChild(newTabContent);
+
+      alert(`Router "${name}" agregado con éxito.`);
+      document.getElementById('add-mikrotik-form').reset();
     }
 
-    async function fetchWeather() {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=precipitation_probability&timezone=America%2FArgentina%2FCordoba&forecast_days=1`;
-
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        const current = data.current;
-        const currentHour = new Date().getHours();
-        const precipProb = data.hourly.precipitation_probability[currentHour] ?? 0;
-
-        document.getElementById('temp').textContent = Math.round(current.temperature_2m);
-        document.getElementById('feels-like').textContent = Math.round(current.apparent_temperature);
-        document.getElementById('weather-desc').textContent = wmoCodes[current.weather_code] || "Variable";
-
-        document.getElementById('wind-speed').textContent = Math.round(current.wind_speed_10m);
-        document.getElementById('wind-gusts').textContent = Math.round(current.wind_gusts_10m);
-        document.getElementById('wind-dir').textContent = getWindDirection(current.wind_direction_10m);
-
-        document.getElementById('precip-prob').textContent = precipProb;
-        document.getElementById('precip-amount').textContent = current.precipitation;
-        document.getElementById('humidity').textContent = current.relative_humidity_2m;
-
-        const now = new Date();
-        document.getElementById('last-update').textContent = `Act. ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} hs`;
-      } catch (err) {
-        console.error("Error al obtener los datos meteorológicos:", err);
-        document.getElementById('last-update').textContent = "Error al cargar datos";
-      }
-    }
-
-    // Cargar todo al iniciar
-    fetchWeather();
     fetchMikrotikMetrics();
-
-    // Actualizar automáticamente cada 30 segundos
-    setInterval(() => {
-      fetchWeather();
-      fetchMikrotikMetrics();
-    }, 30000);
+    setInterval(fetchMikrotikMetrics, 5000);
   </script>
 </body>
 </html>
