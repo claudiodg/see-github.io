@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clima - Río Cuarto</title>
+  <style>
+    :root {
+      --bg-color: #0d0f12;
+      --card-bg: #161a22;
+      --border-color: #262c36;
+      --text-main: #f0f4f8;
+      --text-muted: #8b949e;
+      --cyan: #00e5ff;
+      --orange: #ff7b00;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    header {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: #3b4454;
+    }
+
+    .card-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .value-unit {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .value {
+      font-size: 2.8rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .unit {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+    }
+
+    .color-cyan { color: var(--cyan); }
+    .color-orange { color: var(--orange); }
+
+    .sub-info {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 10px;
+    }
+
+    .loader {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div>
+        <h1>Río Cuarto</h1>
+        <p class="subtitle">Estado meteorológico en tiempo real</p>
+      </div>
+      <p class="subtitle" id="last-update">Cargando...</p>
+    </header>
+
+    <div class="grid">
+      <!-- Tablero Temperatura -->
+      <div class="card">
+        <div class="card-title">Temperatura</div>
+        <div class="value-unit">
+          <span class="value color-orange" id="temp">--</span>
+          <span class="unit">°C</span>
+        </div>
+        <div class="sub-info">
+          <span>Sensación: <strong id="feels-like" style="color:var(--text-main)">--</strong>°C</span>
+          <span id="weather-desc">--</span>
+        </div>
+      </div>
+
+      <!-- Tablero Viento -->
+      <div class="card">
+        <div class="card-title">Viento</div>
+        <div class="value-unit">
+          <span class="value color-cyan" id="wind-speed">--</span>
+          <span class="unit">km/h</span>
+        </div>
+        <div class="sub-info">
+          <span>Ráfagas: <strong id="wind-gusts" style="color:var(--text-main)">--</strong> km/h</span>
+          <span>Dir: <strong id="wind-dir" style="color:var(--text-main)">--</strong></span>
+        </div>
+      </div>
+
+      <!-- Tablero Lluvia -->
+      <div class="card">
+        <div class="card-title">Probabilidad de Lluvia</div>
+        <div class="value-unit">
+          <span class="value color-cyan" id="precip-prob">--</span>
+          <span class="unit">%</span>
+        </div>
+        <div class="sub-info">
+          <span>Precip. hora: <strong id="precip-amount" style="color:var(--text-main)">--</strong> mm</span>
+          <span>Humedad: <strong id="humidity" style="color:var(--text-main)">--</strong>%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const LAT = -33.1307;
+    const LON = -64.3499;
+
+    // Tabla de interpretación de códigos WMO
+    const wmoCodes = {
+      0: "Despejado",
+      1: "Principalmente despejado", 2: "Parcialmente nublado", 3: "Nublado",
+      45: "Niebla", 48: "Niebla con escarcha",
+      51: "Llovizna ligera", 53: "Llovizna moderada", 55: "Llovizna densa",
+      61: "Lluvia ligera", 63: "Lluvia moderada", 65: "Lluvia fuerte",
+      80: "Chubascos suaves", 81: "Chubascos moderados", 82: "Chubascos violentos",
+      95: "Tormenta eléctrica"
+    };
+
+    function getWindDirection(deg) {
+      const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+      return dirs[Math.round(deg / 45) % 8];
+    }
+
+    async function fetchWeather() {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=precipitation_probability&timezone=America%2FArgentina%2FCordoba&forecast_days=1`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        const current = data.current;
+        const currentHour = new Date().getHours();
+        const precipProb = data.hourly.precipitation_probability[currentHour] ?? 0;
+
+        // Actualizar valores en pantalla
+        document.getElementById('temp').textContent = Math.round(current.temperature_2m);
+        document.getElementById('feels-like').textContent = Math.round(current.apparent_temperature);
+        document.getElementById('weather-desc').textContent = wmoCodes[current.weather_code] || "Variable";
+
+        document.getElementById('wind-speed').textContent = Math.round(current.wind_speed_10m);
+        document.getElementById('wind-gusts').textContent = Math.round(current.wind_gusts_10m);
+        document.getElementById('wind-dir').textContent = getWindDirection(current.wind_direction_10m);
+
+        document.getElementById('precip-prob').textContent = precipProb;
+        document.getElementById('precip-amount').textContent = current.precipitation;
+        document.getElementById('humidity').textContent = current.relative_humidity_2m;
+
+        const now = new Date();
+        document.getElementById('last-update').textContent = `Act. ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} hs`;
+      } catch (err) {
+        console.error("Error al obtener los datos meteorológicos:", err);
+        document.getElementById('last-update').textContent = "Error al cargar datos";
+      }
+    }
+
+    fetchWeather();
+  </script>
+</body>
+</html>
