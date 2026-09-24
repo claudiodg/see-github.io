@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clima - Río Cuarto</title>
+  <title>Panel de Monitoreo - MikroTik & Clima</title>
   <style>
     :root {
       --bg-color: #0d0f12;
@@ -13,6 +13,8 @@
       --text-muted: #8b949e;
       --cyan: #00e5ff;
       --orange: #ff7b00;
+      --green: #2ea043;
+      --red: #f85149;
     }
 
     * {
@@ -27,14 +29,14 @@
       color: var(--text-main);
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: 100vh;
       padding: 20px;
     }
 
     .container {
       width: 100%;
-      max-width: 900px;
+      max-width: 1000px;
     }
 
     header {
@@ -55,6 +57,16 @@
     .subtitle {
       color: var(--text-muted);
       font-size: 0.9rem;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 24px 0 12px 0;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .grid {
@@ -105,6 +117,8 @@
 
     .color-cyan { color: var(--cyan); }
     .color-orange { color: var(--orange); }
+    .color-green { color: var(--green); }
+    .color-red { color: var(--red); }
 
     .sub-info {
       margin-top: 14px;
@@ -116,10 +130,16 @@
       padding-top: 10px;
     }
 
-    .loader {
-      color: var(--text-muted);
-      font-size: 0.9rem;
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
     }
+
+    .status-online { background-color: rgba(46, 160, 67, 0.2); color: var(--green); }
+    .status-offline { background-color: rgba(248, 81, 73, 0.2); color: var(--red); }
   </style>
 </head>
 <body>
@@ -127,12 +147,57 @@
   <div class="container">
     <header>
       <div>
-        <h1>Río Cuarto</h1>
-        <p class="subtitle">Estado meteorológico en tiempo real</p>
+        <h1>Dashboard General</h1>
+        <p class="subtitle">Monitoreo MikroTik & Clima en Tiempo Real</p>
       </div>
       <p class="subtitle" id="last-update">Cargando...</p>
     </header>
 
+    <!-- SECCIÓN MIKROTIK (BACKEND RENDER) -->
+    <div class="section-title">📡 Estado del Router MikroTik</div>
+    <div class="grid">
+      <!-- CPU Router -->
+      <div class="card">
+        <div class="card-title">Carga de CPU</div>
+        <div class="value-unit">
+          <span class="value color-cyan" id="mt-cpu">--</span>
+          <span class="unit">%</span>
+        </div>
+        <div class="sub-info">
+          <span>Uptime: <strong id="mt-uptime" style="color:var(--text-main)">--</strong></span>
+          <span id="mt-status" class="status-badge status-offline">Desconectado</span>
+        </div>
+      </div>
+
+      <!-- Memoria RAM -->
+      <div class="card">
+        <div class="card-title">Memoria Libre</div>
+        <div class="value-unit">
+          <span class="value color-green" id="mt-ram">--</span>
+          <span class="unit">MB</span>
+        </div>
+        <div class="sub-info">
+          <span>Total RAM: <strong id="mt-ram-total" style="color:var(--text-main)">--</strong> MB</span>
+          <span id="mt-board">--</span>
+        </div>
+      </div>
+
+      <!-- Sesiones PPP / DHCP -->
+      <div class="card">
+        <div class="card-title">Clientes Activos</div>
+        <div class="value-unit">
+          <span class="value color-orange" id="mt-clients">--</span>
+          <span class="unit">activos</span>
+        </div>
+        <div class="sub-info">
+          <span>PPPoE: <strong id="mt-pppoe" style="color:var(--text-main)">--</strong></span>
+          <span>DHCP: <strong id="mt-dhcp" style="color:var(--text-main)">--</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN CLIMA RÍO CUARTO -->
+    <div class="section-title" style="margin-top: 36px;">☀️ Meteorología - Río Cuarto</div>
     <div class="grid">
       <!-- Tablero Temperatura -->
       <div class="card">
@@ -176,18 +241,50 @@
   </div>
 
   <script>
+    // URL DE TU BACKEND EN RENDER
+    const BACKEND_URL = "https://mikrotik-backend-sv5v.onrender.com";
+
+    // --- 1. OBTENER DATOS DEL MIKROTIK DESDE EL BACKEND ---
+    async function fetchMikrotikMetrics() {
+      try {
+        // Consultamos la métrica del router ID 'default' o el primer router registrado
+        const res = await fetch(`${BACKEND_URL}/api/metrics/default`);
+        
+        if (!res.ok) throw new Error("No se pudo conectar al Router");
+        const data = await res.json();
+
+        document.getElementById('mt-cpu').textContent = data.resources.cpuLoad;
+        document.getElementById('mt-uptime').textContent = data.resources.uptime;
+        document.getElementById('mt-ram').textContent = data.resources.freeMemory;
+        document.getElementById('mt-ram-total').textContent = data.resources.totalMemory;
+        document.getElementById('mt-board').textContent = data.resources.boardName;
+
+        const totalClients = data.sessions.pppActive + data.sessions.dhcpActive;
+        document.getElementById('mt-clients').textContent = totalClients;
+        document.getElementById('mt-pppoe').textContent = data.sessions.pppActive;
+        document.getElementById('mt-dhcp').textContent = data.sessions.dhcpActive;
+
+        const statusBadge = document.getElementById('mt-status');
+        statusBadge.textContent = "Online";
+        statusBadge.className = "status-badge status-online";
+
+      } catch (err) {
+        console.warn("Backend MikroTik no disponible o en standby:", err.message);
+        const statusBadge = document.getElementById('mt-status');
+        statusBadge.textContent = "Standby/Error";
+        statusBadge.className = "status-badge status-offline";
+      }
+    }
+
+    // --- 2. OBTENER DATOS METEOROLÓGICOS (OPEN-METEO) ---
     const LAT = -33.1307;
     const LON = -64.3499;
 
-    // Tabla de interpretación de códigos WMO
     const wmoCodes = {
-      0: "Despejado",
-      1: "Principalmente despejado", 2: "Parcialmente nublado", 3: "Nublado",
-      45: "Niebla", 48: "Niebla con escarcha",
-      51: "Llovizna ligera", 53: "Llovizna moderada", 55: "Llovizna densa",
-      61: "Lluvia ligera", 63: "Lluvia moderada", 65: "Lluvia fuerte",
-      80: "Chubascos suaves", 81: "Chubascos moderados", 82: "Chubascos violentos",
-      95: "Tormenta eléctrica"
+      0: "Despejado", 1: "Principalmente despejado", 2: "Parcialmente nublado", 3: "Nublado",
+      45: "Niebla", 48: "Niebla con escarcha", 51: "Llovizna ligera", 53: "Llovizna moderada",
+      55: "Llovizna densa", 61: "Lluvia ligera", 63: "Lluvia moderada", 65: "Lluvia fuerte",
+      80: "Chubascos suaves", 81: "Chubascos moderados", 82: "Chubascos violentos", 95: "Tormenta eléctrica"
     };
 
     function getWindDirection(deg) {
@@ -206,7 +303,6 @@
         const currentHour = new Date().getHours();
         const precipProb = data.hourly.precipitation_probability[currentHour] ?? 0;
 
-        // Actualizar valores en pantalla
         document.getElementById('temp').textContent = Math.round(current.temperature_2m);
         document.getElementById('feels-like').textContent = Math.round(current.apparent_temperature);
         document.getElementById('weather-desc').textContent = wmoCodes[current.weather_code] || "Variable";
@@ -227,7 +323,15 @@
       }
     }
 
+    // Cargar todo al iniciar
     fetchWeather();
+    fetchMikrotikMetrics();
+
+    // Actualizar automáticamente cada 30 segundos
+    setInterval(() => {
+      fetchWeather();
+      fetchMikrotikMetrics();
+    }, 30000);
   </script>
 </body>
 </html>
