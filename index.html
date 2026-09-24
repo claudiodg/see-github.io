@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Admin MikroTik - Multi Router</title>
+  <!-- Chart.js CDN para el gráfico temporal XY -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg-color: #0d0f12;
@@ -26,7 +28,7 @@
     .subtitle { color: var(--text-muted); font-size: 0.9rem; }
 
     .tabs-nav { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
-    .tab-btn { background-color: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+    .tab-btn { background-color: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
     .tab-btn.active { background-color: var(--cyan); color: #0d0f12; font-weight: 600; }
     .tab-btn.btn-admin { margin-left: auto; border-color: var(--orange); color: var(--orange); }
     .tab-btn.btn-admin.active { background-color: var(--orange); color: #0d0f12; }
@@ -34,21 +36,26 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .section-title { font-size: 1.1rem; font-weight: 600; margin: 20px 0 12px 0; color: var(--cyan); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .section-title { font-size: 1.1rem; font-weight: 600; margin: 24px 0 12px 0; color: var(--cyan); display: flex; justify-content: space-between; align-items: center; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 
-    .card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+    .card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
     .card-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
     .value-unit { display: flex; align-items: baseline; gap: 6px; }
     .value { font-size: 2.2rem; font-weight: 700; }
     .unit { font-size: 1rem; color: var(--text-muted); }
+
+    .sub-info { margin-top: 14px; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; border-top: 1px dashed var(--border-color); padding-top: 10px; }
 
     .color-cyan { color: var(--cyan); }
     .color-orange { color: var(--orange); }
     .color-green { color: var(--green); }
     .color-red { color: var(--red); }
 
-    /* TABLAS PARA ARP Y DISPOSITIVOS */
+    .chart-container { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-top: 12px; position: relative; height: 320px; }
+    
+    .time-select { background-color: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 10px; font-size: 0.85rem; outline: none; cursor: pointer; }
+
     table { width: 100%; border-collapse: collapse; margin-top: 10px; background-color: var(--card-bg); border-radius: 8px; overflow: hidden; }
     th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
     th { background-color: #1c212c; color: var(--text-muted); text-transform: uppercase; }
@@ -75,40 +82,107 @@
       <p class="subtitle" id="last-update">Actualizado: --:-- hs</p>
     </header>
 
+    <!-- PESTAÑAS (TABS) -->
     <div class="tabs-nav" id="tabs-container">
-      <button class="tab-btn btn-admin" onclick="showAdminTab(this)">🔒 Panel Admin</button>
+      <button class="tab-btn btn-admin" id="btn-admin-toggle" onclick="toggleAdminTab()">🔒 Panel Admin</button>
     </div>
 
     <!-- VISTA PRINCIPAL (DASHBOARD) -->
     <div id="router-view" class="tab-content active">
       
-      <!-- RECURSOS Y SALUD DE VÍNCULO -->
-      <div class="section-title">📊 Salud de Vínculo y Recursos</div>
+      <!-- RECURSOS DEL SISTEMA -->
+      <div class="section-title">📊 Recursos del Sistema</div>
       <div class="grid">
         <div class="card" id="card-ping">
-          <div class="card-title">Pérdida de Paquetes (Packet Loss)</div>
+          <div class="card-title">Salud de Vínculo</div>
           <div class="value-unit">
             <span class="value color-red" id="mt-loss">0</span>
-            <span class="unit">%</span>
+            <span class="unit">% loss</span>
           </div>
-          <div class="subtitle" style="margin-top:8px">Latencia promedio: <strong id="mt-latency" style="color:#fff">--</strong></div>
+          <div class="sub-info">
+            <span>Latencia RTT: <strong id="mt-latency" style="color:#fff">--</strong></span>
+          </div>
         </div>
 
         <div class="card" id="card-cpu">
-          <div class="card-title">Carga de CPU</div>
+          <div class="card-title">Carga CPU & Uptime</div>
           <div class="value-unit">
             <span class="value color-cyan" id="mt-cpu">--</span>
             <span class="unit">%</span>
           </div>
-          <div class="subtitle" style="margin-top:8px">Uptime: <strong id="mt-uptime" style="color:#fff">--</strong></div>
+          <div class="sub-info">
+            <span>Uptime: <strong id="mt-uptime" style="color:#fff">--</strong></span>
+          </div>
         </div>
 
         <div class="card" id="card-ram">
-          <div class="card-title">Memoria Libre</div>
+          <div class="card-title">Memoria RAM Libre</div>
           <div class="value-unit">
             <span class="value color-green" id="mt-ram">--</span>
             <span class="unit">MB</span>
           </div>
+          <div class="sub-info">
+            <span>Total: <strong id="mt-ram-total" style="color:#fff">--</strong> MB</span>
+          </div>
+        </div>
+
+        <div class="card" id="card-model">
+          <div class="card-title">Modelo & RouterOS</div>
+          <div class="value-unit">
+            <span class="value color-orange" style="font-size:1.6rem;" id="mt-model">--</span>
+          </div>
+          <div class="sub-info">
+            <span>Versión OS: <strong id="mt-version" style="color:#fff">--</strong></span>
+          </div>
+        </div>
+
+        <div class="card" id="card-health">
+          <div class="card-title">Temperatura / Voltaje</div>
+          <div class="value-unit">
+            <span class="value color-red" id="mt-temp">--</span>
+            <span class="unit">°C</span>
+          </div>
+          <div class="sub-info">
+            <span>Voltaje: <strong id="mt-volts" style="color:#fff">--</strong> V</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRÁFICO Y GRÁFICO XY -->
+      <div id="section-traffic">
+        <div class="section-title">
+          <span>🚀 Tráfico de Ancho de Banda (Tiempo Real)</span>
+          <div>
+            <label for="time-window" class="subtitle">Ventana Temporal: </label>
+            <select id="time-window" class="time-select" onchange="updateTimeWindow()">
+              <option value="12">1 Minuto</option>
+              <option value="60" selected>5 Minutos</option>
+              <option value="180">15 Minutos</option>
+              <option value="360">30 Minutos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">Bajada Actual (Download)</div>
+            <div class="value-unit">
+              <span class="value color-cyan" id="mt-rx">0.00</span>
+              <span class="unit">Mbps</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Subida Actual (Upload)</div>
+            <div class="value-unit">
+              <span class="value color-orange" id="mt-tx">0.00</span>
+              <span class="unit">Mbps</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRÁFICO XY CONTINUO -->
+        <div class="chart-container">
+          <canvas id="trafficChart"></canvas>
         </div>
       </div>
 
@@ -162,21 +236,24 @@
     <!-- PESTAÑA: PANEL ADMIN -->
     <div id="admin-view" class="tab-content">
       
-      <!-- PERSONALIZAR MÉTRICAS AHORA DENTRO DE ADMIN -->
+      <!-- CHECKLIST DENTRO DE ADMIN -->
       <div class="admin-box">
         <div class="section-title" style="margin-top:0">⚙️ Personalizar Métricas Visibles en Pantalla</div>
         <p class="subtitle">Selecciona los bloques de información que deseas desplegar en el dashboard principal:</p>
         <div class="checklist-grid">
           <label class="checklist-item"><input type="checkbox" id="chk-ping" checked onchange="toggleWidget('card-ping')"> Salud de Vínculo / Packet Loss</label>
-          <label class="checklist-item"><input type="checkbox" id="chk-cpu" checked onchange="toggleWidget('card-cpu')"> Carga de CPU</label>
+          <label class="checklist-item"><input type="checkbox" id="chk-cpu" checked onchange="toggleWidget('card-cpu')"> Carga CPU & Uptime</label>
           <label class="checklist-item"><input type="checkbox" id="chk-ram" checked onchange="toggleWidget('card-ram')"> Memoria RAM</label>
+          <label class="checklist-item"><input type="checkbox" id="chk-model" checked onchange="toggleWidget('card-model')"> Modelo / RouterOS</label>
+          <label class="checklist-item"><input type="checkbox" id="chk-health" checked onchange="toggleWidget('card-health')"> Temperatura / Voltaje</label>
+          <label class="checklist-item"><input type="checkbox" id="chk-traffic" checked onchange="toggleWidget('section-traffic')"> Ancho de Banda y Gráfico XY</label>
           <label class="checklist-item"><input type="checkbox" id="chk-wifi" checked onchange="toggleWidget('section-wifi')"> Consumos Redes Wi-Fi</label>
           <label class="checklist-item"><input type="checkbox" id="chk-devices" checked onchange="toggleWidget('section-devices')"> Dispositivos (Nombre e IP)</label>
           <label class="checklist-item"><input type="checkbox" id="chk-arp" checked onchange="toggleWidget('section-arp')"> Tabla ARP</label>
         </div>
       </div>
 
-      <!-- FORMULARIO NUEVO ROUTER -->
+      <!-- FORMULARIO ENLAZAR ROUTER -->
       <div class="admin-box">
         <div class="section-title" style="margin-top:0">🔒 Enlazar un Nuevo Router MikroTik</div>
         <form id="add-mikrotik-form" onsubmit="handleAddRouter(event)">
@@ -211,10 +288,81 @@
   <script>
     const BACKEND_URL = "https://mikrotik-backend-sv5v.onrender.com";
     let activeRouterId = null;
+    let isAdminOpen = false;
+    let trafficChart = null;
+    let maxDataPoints = 60; // 5 minutos por defecto (cada 5s)
 
     function toggleWidget(id) {
       const el = document.getElementById(id);
-      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+      if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+    }
+
+    // Inicializar Gráfico Chart.js
+    function initChart() {
+      const ctx = document.getElementById('trafficChart').getContext('2d');
+      trafficChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Bajada (Download - Mbps)',
+              borderColor: '#00e5ff',
+              backgroundColor: 'rgba(0, 229, 255, 0.1)',
+              data: [],
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Subida (Upload - Mbps)',
+              borderColor: '#ff7b00',
+              backgroundColor: 'rgba(255, 123, 0, 0.1)',
+              data: [],
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              grid: { color: '#262c36' },
+              ticks: { color: '#8b949e', maxRotation: 0 }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: '#262c36' },
+              ticks: { color: '#8b949e' }
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#f0f4f8' } }
+          }
+        }
+      });
+    }
+
+    function updateTimeWindow() {
+      const select = document.getElementById('time-window');
+      maxDataPoints = parseInt(select.value);
+    }
+
+    function addChartData(timeLabel, rx, tx) {
+      if (!trafficChart) return;
+      
+      trafficChart.data.labels.push(timeLabel);
+      trafficChart.data.datasets[0].data.push(rx);
+      trafficChart.data.datasets[1].data.push(tx);
+
+      while (trafficChart.data.labels.length > maxDataPoints) {
+        trafficChart.data.labels.shift();
+        trafficChart.data.datasets[0].data.shift();
+        trafficChart.data.datasets[1].data.shift();
+      }
+
+      trafficChart.update();
     }
 
     async function loadRouters() {
@@ -222,7 +370,7 @@
         const res = await fetch(`${BACKEND_URL}/api/routers`);
         const routers = await res.json();
         const tabsContainer = document.getElementById('tabs-container');
-        const adminBtn = document.querySelector('.btn-admin');
+        const adminBtn = document.getElementById('btn-admin-toggle');
         tabsContainer.innerHTML = '';
 
         routers.forEach((r, idx) => {
@@ -240,18 +388,42 @@
 
     function selectRouter(id, btn) {
       activeRouterId = id;
+      isAdminOpen = false;
+
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
+
       document.getElementById('admin-view').classList.remove('active');
       document.getElementById('router-view').classList.add('active');
+      
       fetchRouterMetrics(id);
     }
 
-    function showAdminTab(btn) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('router-view').classList.remove('active');
-      document.getElementById('admin-view').classList.add('active');
+    // Alternar vista del Panel Admin sin perder navegación
+    function toggleAdminTab() {
+      const adminBtn = document.getElementById('btn-admin-toggle');
+      
+      if (isAdminOpen) {
+        isAdminOpen = false;
+        document.getElementById('admin-view').classList.remove('active');
+        document.getElementById('router-view').classList.add('active');
+        adminBtn.classList.remove('active');
+        
+        // Reactivar pestaña activa
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(t => {
+          if (t.textContent.includes('⚙️') && t.classList.contains('active-router')) {
+            t.classList.add('active');
+          }
+        });
+      } else {
+        isAdminOpen = true;
+        document.getElementById('router-view').classList.remove('active');
+        document.getElementById('admin-view').classList.add('active');
+        
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        adminBtn.classList.add('active');
+      }
     }
 
     async function fetchRouterMetrics(id) {
@@ -260,23 +432,37 @@
         const res = await fetch(`${BACKEND_URL}/api/metrics/${id}`);
         const data = await res.json();
 
-        // Ping y Pérdida
+        // Ping y Salud
         document.getElementById('mt-loss').textContent = data.linkHealth ? data.linkHealth.packetLoss : '0';
         document.getElementById('mt-latency').textContent = data.linkHealth ? data.linkHealth.latency : '0ms';
 
-        // CPU / RAM / Uptime
+        // Recursos Básicos
         document.getElementById('mt-cpu').textContent = data.cpuLoad || '0';
         document.getElementById('mt-uptime').textContent = data.uptime || '--';
         document.getElementById('mt-ram').textContent = data.freeMemoryMb || '0';
+        document.getElementById('mt-ram-total').textContent = data.totalMemoryMb || '0';
+        document.getElementById('mt-model').textContent = data.identity || 'MikroTik';
+        document.getElementById('mt-version').textContent = data.version || 'v7.x';
+        document.getElementById('mt-temp').textContent = data.temperature || 'N/A';
+        document.getElementById('mt-volts').textContent = data.voltage || 'N/A';
 
-        // Redes Wi-Fi
+        // Tráfico Ancho de Banda + Gráfico
+        const rx = data.traffic ? parseFloat(data.traffic.rxMbps) : 0;
+        const tx = data.traffic ? parseFloat(data.traffic.txMbps) : 0;
+        document.getElementById('mt-rx').textContent = rx.toFixed(2);
+        document.getElementById('mt-tx').textContent = tx.toFixed(2);
+
+        const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        addChartData(timeNow, rx, tx);
+
+        // Wi-Fi
         const wifiContainer = document.getElementById('wifi-cards-container');
         wifiContainer.innerHTML = '';
         if (data.wifi && data.wifi.length > 0) {
           data.wifi.forEach(w => {
             wifiContainer.innerHTML += `
               <div class="card">
-                <div class="card-title">Interfaz: ${w.ssid}</div>
+                <div class="card-title">SSID / Interfaz: ${w.ssid}</div>
                 <div class="value-unit"><span class="value color-cyan">${w.rxMbps}</span><span class="unit">Mbps (Bajada)</span></div>
                 <div class="value-unit" style="margin-top:6px"><span class="value color-orange">${w.txMbps}</span><span class="unit">Mbps (Subida)</span></div>
               </div>`;
@@ -285,7 +471,7 @@
           wifiContainer.innerHTML = `<div class="card"><p class="subtitle">Sin interfaces Wi-Fi detectadas</p></div>`;
         }
 
-        // Dispositivos por Nombre e IP
+        // Dispositivos
         const tbDev = document.getElementById('tb-devices');
         tbDev.innerHTML = '';
         if (data.devices && data.devices.length > 0) {
@@ -310,7 +496,7 @@
       } catch (err) { console.error(err); }
 
       const now = new Date();
-      document.getElementById('last-update').textContent = `Actualizado: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} hs`;
+      document.getElementById('last-update').textContent = `Actualizado: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')} hs`;
     }
 
     async function handleAddRouter(e) {
@@ -334,8 +520,11 @@
       }
     }
 
-    loadRouters();
-    setInterval(() => { if (activeRouterId) fetchRouterMetrics(activeRouterId); }, 5000);
+    window.onload = () => {
+      initChart();
+      loadRouters();
+      setInterval(() => { if (activeRouterId) fetchRouterMetrics(activeRouterId); }, 5000);
+    };
   </script>
 </body>
 </html>
