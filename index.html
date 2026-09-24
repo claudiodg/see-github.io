@@ -17,276 +17,51 @@
       --red: #f85149;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; padding: 20px; }
+    .container { width: 100%; max-width: 1100px; }
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 20px;
-    }
+    header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+    h1 { font-size: 1.8rem; font-weight: 600; }
+    .subtitle { color: var(--text-muted); font-size: 0.9rem; }
 
-    .container {
-      width: 100%;
-      max-width: 1100px;
-    }
+    .tabs-nav { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+    .tab-btn { background-color: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+    .tab-btn.active { background-color: var(--cyan); color: #0d0f12; font-weight: 600; }
+    .tab-btn.btn-admin { margin-left: auto; border-color: var(--orange); color: var(--orange); }
+    .tab-btn.btn-admin.active { background-color: var(--orange); color: #0d0f12; }
 
-    header {
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 12px;
-    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
-    h1 {
-      font-size: 1.8rem;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-    }
+    .section-title { font-size: 1.1rem; font-weight: 600; margin: 20px 0 12px 0; color: var(--cyan); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 
-    .subtitle {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    /* PESTAÑAS (TABS) */
-    .tabs-nav {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 8px;
-      overflow-x: auto;
-    }
-
-    .tab-btn {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-    }
-
-    .tab-btn:hover {
-      border-color: #3b4454;
-      color: var(--text-main);
-    }
-
-    .tab-btn.active {
-      background-color: var(--cyan);
-      color: #0d0f12;
-      border-color: var(--cyan);
-      font-weight: 600;
-    }
-
-    .tab-btn.btn-admin {
-      margin-left: auto;
-      border-color: var(--orange);
-      color: var(--orange);
-    }
-
-    .tab-btn.btn-admin.active {
-      background-color: var(--orange);
-      color: #0d0f12;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* SELECTOR DE MÉTRICAS / CHECKLIST */
-    .metrics-checklist {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: center;
-    }
-
-    .metrics-checklist span {
-      font-weight: 600;
-      color: var(--cyan);
-      width: 100%;
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .checklist-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
-      color: var(--text-main);
-      cursor: pointer;
-    }
-
-    .checklist-item input {
-      accent-color: var(--cyan);
-      cursor: pointer;
-    }
-
-    /* TARJETAS Y GRID */
-    .section-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin: 20px 0 12px 0;
-      color: var(--cyan);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: border-color 0.2s ease;
-    }
-
-    .card:hover {
-      border-color: #3b4454;
-    }
-
-    .card-title {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-    }
-
-    .value-unit {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-    }
-
-    .value {
-      font-size: 2.5rem;
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .unit {
-      font-size: 1.1rem;
-      color: var(--text-muted);
-    }
+    .card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+    .card-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .value-unit { display: flex; align-items: baseline; gap: 6px; }
+    .value { font-size: 2.2rem; font-weight: 700; }
+    .unit { font-size: 1rem; color: var(--text-muted); }
 
     .color-cyan { color: var(--cyan); }
     .color-orange { color: var(--orange); }
     .color-green { color: var(--green); }
     .color-red { color: var(--red); }
 
-    .sub-info {
-      margin-top: 14px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-      border-top: 1px dashed var(--border-color);
-      padding-top: 10px;
-    }
+    /* TABLAS PARA ARP Y DISPOSITIVOS */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background-color: var(--card-bg); border-radius: 8px; overflow: hidden; }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+    th { background-color: #1c212c; color: var(--text-muted); text-transform: uppercase; }
 
-    .status-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: bold;
-    }
+    .admin-box { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .checklist-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+    .checklist-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; }
+    .checklist-item input { accent-color: var(--orange); }
 
-    .status-online { background-color: rgba(46, 160, 67, 0.2); color: var(--green); }
-    .status-offline { background-color: rgba(248, 81, 73, 0.2); color: var(--red); }
-
-    /* FORMULARIO ADMIN */
-    .admin-form {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 600px;
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 10px 14px;
-      background-color: var(--bg-color);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      color: var(--text-main);
-      font-size: 0.95rem;
-    }
-
-    .form-group input:focus {
-      outline: none;
-      border-color: var(--cyan);
-    }
-
-    .btn-submit {
-      width: 100%;
-      padding: 12px;
-      background-color: var(--green);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-
-    .btn-submit:hover {
-      opacity: 0.9;
-    }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
+    .form-group input { width: 100%; padding: 10px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; }
+    .btn-submit { width: 100%; padding: 12px; background-color: var(--green); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -294,44 +69,38 @@
   <div class="container">
     <header>
       <div>
-        <h1 id="header-title">Panel de Gestión MikroTik</h1>
-        <p class="subtitle">Monitoreo de Red & Administración Multi-Router</p>
+        <h1>Panel de Gestión MikroTik</h1>
+        <p class="subtitle">Monitoreo Avanzado & Administración Multi-Router</p>
       </div>
       <p class="subtitle" id="last-update">Actualizado: --:-- hs</p>
     </header>
 
-    <!-- CHECKLIST DE CONFIGURACIÓN DE DASHBOARDS -->
-    <div class="metrics-checklist">
-      <span>⚙️ Personalizar Métricas Visibles en Pantalla</span>
-      <label class="checklist-item"><input type="checkbox" id="chk-cpu" checked onchange="toggleWidget('card-cpu')"> Carga CPU</label>
-      <label class="checklist-item"><input type="checkbox" id="chk-ram" checked onchange="toggleWidget('card-ram')"> Memoria RAM</label>
-      <label class="checklist-item"><input type="checkbox" id="chk-model" checked onchange="toggleWidget('card-model')"> Modelo / RouterOS</label>
-      <label class="checklist-item"><input type="checkbox" id="chk-traffic" checked onchange="toggleWidget('section-traffic')"> Tráfico (Bajada/Subida)</label>
-      <label class="checklist-item"><input type="checkbox" id="chk-clients" checked onchange="toggleWidget('section-clients')"> Sesiones Clientes</label>
-      <label class="checklist-item"><input type="checkbox" id="chk-health" checked onchange="toggleWidget('card-health')"> Temperatura / Voltaje</label>
-    </div>
-
-    <!-- NAVEGACIÓN DE PESTAÑAS GENERADAS DINÁMICAMENTE -->
     <div class="tabs-nav" id="tabs-container">
       <button class="tab-btn btn-admin" onclick="showAdminTab(this)">🔒 Panel Admin</button>
     </div>
 
-    <!-- VISTA PRINCIPAL DEL ROUTER (SE REGENERA SEGÚN EL SELECCIONADO) -->
+    <!-- VISTA PRINCIPAL (DASHBOARD) -->
     <div id="router-view" class="tab-content active">
       
-      <!-- RECURSOS -->
-      <div class="section-title">📊 Recursos del Sistema</div>
+      <!-- RECURSOS Y SALUD DE VÍNCULO -->
+      <div class="section-title">📊 Salud de Vínculo y Recursos</div>
       <div class="grid">
+        <div class="card" id="card-ping">
+          <div class="card-title">Pérdida de Paquetes (Packet Loss)</div>
+          <div class="value-unit">
+            <span class="value color-red" id="mt-loss">0</span>
+            <span class="unit">%</span>
+          </div>
+          <div class="subtitle" style="margin-top:8px">Latencia promedio: <strong id="mt-latency" style="color:#fff">--</strong></div>
+        </div>
+
         <div class="card" id="card-cpu">
           <div class="card-title">Carga de CPU</div>
           <div class="value-unit">
             <span class="value color-cyan" id="mt-cpu">--</span>
             <span class="unit">%</span>
           </div>
-          <div class="sub-info">
-            <span>Uptime: <strong id="mt-uptime" style="color:var(--text-main)">--</strong></span>
-            <span id="mt-status" class="status-badge status-offline">Cargando...</span>
-          </div>
+          <div class="subtitle" style="margin-top:8px">Uptime: <strong id="mt-uptime" style="color:#fff">--</strong></div>
         </div>
 
         <div class="card" id="card-ram">
@@ -340,116 +109,101 @@
             <span class="value color-green" id="mt-ram">--</span>
             <span class="unit">MB</span>
           </div>
-          <div class="sub-info">
-            <span>Total RAM: <strong id="mt-ram-total" style="color:var(--text-main)">--</strong> MB</span>
-            <span id="mt-board">--</span>
-          </div>
-        </div>
-
-        <div class="card" id="card-model">
-          <div class="card-title">Modelo / Placa</div>
-          <div class="value-unit">
-            <span class="value color-orange" style="font-size:1.8rem;" id="mt-model">--</span>
-          </div>
-          <div class="sub-info">
-            <span>Versión ROS: <strong id="mt-version" style="color:var(--text-main)">--</strong></span>
-          </div>
-        </div>
-
-        <div class="card" id="card-health">
-          <div class="card-title">Estado / Temperatura</div>
-          <div class="value-unit">
-            <span class="value color-red" id="mt-temp">--</span>
-            <span class="unit">°C</span>
-          </div>
-          <div class="sub-info">
-            <span>Voltaje: <strong id="mt-volts" style="color:var(--text-main)">--</strong> V</span>
-          </div>
         </div>
       </div>
 
-      <!-- ANCHO DE BANDA -->
-      <div id="section-traffic">
-        <div class="section-title">🚀 Tráfico de Red (Ancho de Banda)</div>
-        <div class="grid">
-          <div class="card">
-            <div class="card-title">Velocidad de Bajada (Download)</div>
-            <div class="value-unit">
-              <span class="value color-cyan" id="mt-rx">0.0</span>
-              <span class="unit">Mbps</span>
-            </div>
-            <div class="sub-info">
-              <span>Interfaz: <strong style="color:var(--text-main)">WAN (ether1)</strong></span>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-title">Velocidad de Subida (Upload)</div>
-            <div class="value-unit">
-              <span class="value color-orange" id="mt-tx">0.0</span>
-              <span class="unit">Mbps</span>
-            </div>
-            <div class="sub-info">
-              <span>Interfaz: <strong style="color:var(--text-main)">WAN (ether1)</strong></span>
-            </div>
-          </div>
+      <!-- CONSUMO REDES WI-FI -->
+      <div id="section-wifi">
+        <div class="section-title">📶 Consumo de Redes Wi-Fi</div>
+        <div class="grid" id="wifi-cards-container">
+          <div class="card"><p class="subtitle">Cargando interfaces Wi-Fi...</p></div>
         </div>
       </div>
 
-      <!-- SESIONES -->
-      <div id="section-clients">
-        <div class="section-title">👥 Sesiones y Clientes Activos</div>
-        <div class="grid">
-          <div class="card">
-            <div class="card-title">Total Conexiones</div>
-            <div class="value-unit">
-              <span class="value color-green" id="mt-clients">--</span>
-              <span class="unit">activos</span>
-            </div>
-            <div class="sub-info">
-              <span>PPPoE: <strong id="mt-pppoe" style="color:var(--text-main)">--</strong></span>
-              <span>DHCP: <strong id="mt-dhcp" style="color:var(--text-main)">--</strong></span>
-            </div>
-          </div>
-        </div>
+      <!-- DISPOSITIVOS Y CONSUMOS POR IP/NOMBRE -->
+      <div id="section-devices">
+        <div class="section-title">📱 Dispositivos Conectados (Nombre e IP)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre Dispositivo</th>
+              <th>Dirección IP</th>
+              <th>MAC Address</th>
+              <th>Estado Lease</th>
+              <th>Límite de Ancho de Banda</th>
+            </tr>
+          </thead>
+          <tbody id="tb-devices">
+            <tr><td colspan="5">Cargando lista de dispositivos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TABLA ARP -->
+      <div id="section-arp">
+        <div class="section-title">🌐 Tabla ARP del Router</div>
+        <table>
+          <thead>
+            <tr>
+              <th>IP Address</th>
+              <th>MAC Address</th>
+              <th>Interfaz</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tb-arp">
+            <tr><td colspan="4">Cargando tabla ARP...</td></tr>
+          </tbody>
+        </table>
       </div>
 
     </div>
 
-    <!-- PESTAÑA: MODO ADMIN (FORMULARIO) -->
+    <!-- PESTAÑA: PANEL ADMIN -->
     <div id="admin-view" class="tab-content">
-      <div class="section-title">🔒 Enlazar un Nuevo Router MikroTik</div>
       
-      <div class="admin-form">
+      <!-- PERSONALIZAR MÉTRICAS AHORA DENTRO DE ADMIN -->
+      <div class="admin-box">
+        <div class="section-title" style="margin-top:0">⚙️ Personalizar Métricas Visibles en Pantalla</div>
+        <p class="subtitle">Selecciona los bloques de información que deseas desplegar en el dashboard principal:</p>
+        <div class="checklist-grid">
+          <label class="checklist-item"><input type="checkbox" id="chk-ping" checked onchange="toggleWidget('card-ping')"> Salud de Vínculo / Packet Loss</label>
+          <label class="checklist-item"><input type="checkbox" id="chk-cpu" checked onchange="toggleWidget('card-cpu')"> Carga de CPU</label>
+          <label class="checklist-item"><input type="checkbox" id="chk-ram" checked onchange="toggleWidget('card-ram')"> Memoria RAM</label>
+          <label class="checklist-item"><input type="checkbox" id="chk-wifi" checked onchange="toggleWidget('section-wifi')"> Consumos Redes Wi-Fi</label>
+          <label class="checklist-item"><input type="checkbox" id="chk-devices" checked onchange="toggleWidget('section-devices')"> Dispositivos (Nombre e IP)</label>
+          <label class="checklist-item"><input type="checkbox" id="chk-arp" checked onchange="toggleWidget('section-arp')"> Tabla ARP</label>
+        </div>
+      </div>
+
+      <!-- FORMULARIO NUEVO ROUTER -->
+      <div class="admin-box">
+        <div class="section-title" style="margin-top:0">🔒 Enlazar un Nuevo Router MikroTik</div>
         <form id="add-mikrotik-form" onsubmit="handleAddRouter(event)">
           <div class="form-group">
-            <label>Nombre del Router / Identificador</label>
-            <input type="text" id="router-name" placeholder="Ej: Router Sucursal Central" required>
+            <label>Nombre del Router</label>
+            <input type="text" id="router-name" placeholder="Ej: Router Central" required>
           </div>
-
           <div class="form-group">
-            <label>Dirección IP / Dominio DDNS</label>
-            <input type="text" id="router-ip" placeholder="Ej: 192.168.88.1 o mi-mikrotik.sn.mynetname.net" required>
+            <label>IP / Dominio DDNS</label>
+            <input type="text" id="router-ip" placeholder="Ej: 192.168.88.1" required>
           </div>
-
           <div class="form-group">
             <label>Puerto API RouterOS</label>
             <input type="number" id="router-port" value="8728" required>
           </div>
-
           <div class="form-group">
             <label>Usuario MikroTik</label>
             <input type="text" id="router-user" placeholder="admin" required>
           </div>
-
           <div class="form-group">
             <label>Contraseña</label>
             <input type="password" id="router-pass" placeholder="••••••••">
           </div>
-
-          <button type="submit" class="btn-submit">+ Guardar y Enlazar en Render API</button>
+          <button type="submit" class="btn-submit">+ Guardar y Enlazar Router</button>
         </form>
       </div>
+
     </div>
 
   </div>
@@ -458,110 +212,109 @@
     const BACKEND_URL = "https://mikrotik-backend-sv5v.onrender.com";
     let activeRouterId = null;
 
-    // Mostrar u Ocultar widgets mediante la checklist
-    function toggleWidget(elementId) {
-      const el = document.getElementById(elementId);
-      if (el) {
-        el.style.display = el.style.display === 'none' ? 'block' : 'none';
-      }
+    function toggleWidget(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
 
-    // Cargar lista de routers registrados
     async function loadRouters() {
       try {
         const res = await fetch(`${BACKEND_URL}/api/routers`);
         const routers = await res.json();
-        
         const tabsContainer = document.getElementById('tabs-container');
         const adminBtn = document.querySelector('.btn-admin');
         tabsContainer.innerHTML = '';
 
-        routers.forEach((router, index) => {
+        routers.forEach((r, idx) => {
           const btn = document.createElement('button');
-          btn.className = `tab-btn ${ (activeRouterId === router.id || (!activeRouterId && index === 0)) ? 'active' : '' }`;
-          btn.innerHTML = `⚙️ ${router.name}`;
-          btn.onclick = () => selectRouter(router.id, router.name, btn);
+          btn.className = `tab-btn ${ (activeRouterId === r.id || (!activeRouterId && idx === 0)) ? 'active' : '' }`;
+          btn.innerHTML = `⚙️ ${r.name}`;
+          btn.onclick = () => selectRouter(r.id, btn);
           tabsContainer.appendChild(btn);
         });
 
         tabsContainer.appendChild(adminBtn);
-
-        if (routers.length > 0 && !activeRouterId) {
-          selectRouter(routers[0].id, routers[0].name, tabsContainer.firstChild);
-        }
-      } catch (err) {
-        console.error("Error al conectar con Render API:", err);
-      }
+        if (routers.length > 0 && !activeRouterId) selectRouter(routers[0].id, tabsContainer.firstChild);
+      } catch (err) { console.error(err); }
     }
 
-    // Cambiar de pestaña entre Routers
-    function selectRouter(id, name, btnElement) {
+    function selectRouter(id, btn) {
       activeRouterId = id;
-
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      if (btnElement) btnElement.classList.add('active');
-
+      if (btn) btn.classList.add('active');
       document.getElementById('admin-view').classList.remove('active');
       document.getElementById('router-view').classList.add('active');
-
       fetchRouterMetrics(id);
     }
 
-    // Cambiar a la pestaña de Administrador
-    function showAdminTab(btnElement) {
+    function showAdminTab(btn) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btnElement.classList.add('active');
-
+      btn.classList.add('active');
       document.getElementById('router-view').classList.remove('active');
       document.getElementById('admin-view').classList.add('active');
     }
 
-    // Consultar métricas del router activo
-    async function fetchRouterMetrics(routerId) {
-      if (!routerId) return;
-
+    async function fetchRouterMetrics(id) {
+      if (!id) return;
       try {
-        const res = await fetch(`${BACKEND_URL}/api/metrics/${routerId}`);
-        if (!res.ok) throw new Error("Error obteniendo métricas");
-        
+        const res = await fetch(`${BACKEND_URL}/api/metrics/${id}`);
         const data = await res.json();
 
+        // Ping y Pérdida
+        document.getElementById('mt-loss').textContent = data.linkHealth ? data.linkHealth.packetLoss : '0';
+        document.getElementById('mt-latency').textContent = data.linkHealth ? data.linkHealth.latency : '0ms';
+
+        // CPU / RAM / Uptime
         document.getElementById('mt-cpu').textContent = data.cpuLoad || '0';
         document.getElementById('mt-uptime').textContent = data.uptime || '--';
         document.getElementById('mt-ram').textContent = data.freeMemoryMb || '0';
-        document.getElementById('mt-ram-total').textContent = data.totalMemoryMb || '0';
-        document.getElementById('mt-board').textContent = data.identity || 'MikroTik';
-        document.getElementById('mt-model').textContent = data.identity || 'RouterOS';
-        document.getElementById('mt-version').textContent = data.version || 'v7.x';
 
-        document.getElementById('mt-rx').textContent = data.traffic ? data.traffic.rxMbps : '0.0';
-        document.getElementById('mt-tx').textContent = data.traffic ? data.traffic.txMbps : '0.0';
+        // Redes Wi-Fi
+        const wifiContainer = document.getElementById('wifi-cards-container');
+        wifiContainer.innerHTML = '';
+        if (data.wifi && data.wifi.length > 0) {
+          data.wifi.forEach(w => {
+            wifiContainer.innerHTML += `
+              <div class="card">
+                <div class="card-title">Interfaz: ${w.ssid}</div>
+                <div class="value-unit"><span class="value color-cyan">${w.rxMbps}</span><span class="unit">Mbps (Bajada)</span></div>
+                <div class="value-unit" style="margin-top:6px"><span class="value color-orange">${w.txMbps}</span><span class="unit">Mbps (Subida)</span></div>
+              </div>`;
+          });
+        } else {
+          wifiContainer.innerHTML = `<div class="card"><p class="subtitle">Sin interfaces Wi-Fi detectadas</p></div>`;
+        }
 
-        document.getElementById('mt-clients').textContent = data.clients ? data.clients.total : '0';
-        document.getElementById('mt-pppoe').textContent = data.clients ? data.clients.pppoe : '0';
-        document.getElementById('mt-dhcp').textContent = data.clients ? data.clients.dhcp : '0';
+        // Dispositivos por Nombre e IP
+        const tbDev = document.getElementById('tb-devices');
+        tbDev.innerHTML = '';
+        if (data.devices && data.devices.length > 0) {
+          data.devices.forEach(d => {
+            tbDev.innerHTML += `<tr><td><strong>${d.hostName}</strong></td><td>${d.ip}</td><td>${d.mac}</td><td>${d.status}</td><td>${d.rate}</td></tr>`;
+          });
+        } else {
+          tbDev.innerHTML = `<tr><td colspan="5">No hay leases DHCP activos</td></tr>`;
+        }
 
-        document.getElementById('mt-temp').textContent = data.temperature || 'N/A';
-        document.getElementById('mt-volts').textContent = data.voltage || 'N/A';
+        // Tabla ARP
+        const tbArp = document.getElementById('tb-arp');
+        tbArp.innerHTML = '';
+        if (data.arp && data.arp.length > 0) {
+          data.arp.forEach(a => {
+            tbArp.innerHTML += `<tr><td>${a.ip}</td><td>${a.mac}</td><td>${a.interface}</td><td>${a.status}</td></tr>`;
+          });
+        } else {
+          tbArp.innerHTML = `<tr><td colspan="4">Tabla ARP vacía</td></tr>`;
+        }
 
-        const badge = document.getElementById('mt-status');
-        badge.textContent = "Online";
-        badge.className = "status-badge status-online";
-
-      } catch (err) {
-        const badge = document.getElementById('mt-status');
-        badge.textContent = "Standby/Error";
-        badge.className = "status-badge status-offline";
-      }
+      } catch (err) { console.error(err); }
 
       const now = new Date();
       document.getElementById('last-update').textContent = `Actualizado: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} hs`;
     }
 
-    // Guardar un nuevo router
     async function handleAddRouter(e) {
       e.preventDefault();
-      
       const payload = {
         name: document.getElementById('router-name').value,
         host: document.getElementById('router-ip').value,
@@ -569,32 +322,20 @@
         user: document.getElementById('router-user').value,
         pass: document.getElementById('router-pass').value
       };
-
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/routers`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-          const newRouter = await res.json();
-          alert(`Router "${newRouter.name}" guardado exitosamente.`);
-          document.getElementById('add-mikrotik-form').reset();
-          activeRouterId = newRouter.id;
-          await loadRouters();
-        } else {
-          alert("Error al guardar en el servidor.");
-        }
-      } catch (err) {
-        alert("No se pudo conectar con el backend en Render.");
+      const res = await fetch(`${BACKEND_URL}/api/routers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        alert("Router enlazado con éxito");
+        document.getElementById('add-mikrotik-form').reset();
+        await loadRouters();
       }
     }
 
     loadRouters();
-    setInterval(() => {
-      if (activeRouterId) fetchRouterMetrics(activeRouterId);
-    }, 5000);
+    setInterval(() => { if (activeRouterId) fetchRouterMetrics(activeRouterId); }, 5000);
   </script>
 </body>
 </html>
