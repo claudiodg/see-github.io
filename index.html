@@ -116,6 +116,42 @@
       display: block;
     }
 
+    /* SELECTOR DE MÉTRICAS / CHECKLIST */
+    .metrics-checklist {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .metrics-checklist span {
+      font-weight: 600;
+      color: var(--cyan);
+      width: 100%;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .checklist-item input {
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+
     /* TARJETAS Y GRID */
     .section-title {
       font-size: 1.1rem;
@@ -264,9 +300,19 @@
       <p class="subtitle" id="last-update">Actualizado: --:-- hs</p>
     </header>
 
+    <!-- CHECKLIST DE CONFIGURACIÓN DE DASHBOARDS -->
+    <div class="metrics-checklist">
+      <span>⚙️ Personalizar Métricas Visibles en Pantalla</span>
+      <label class="checklist-item"><input type="checkbox" id="chk-cpu" checked onchange="toggleWidget('card-cpu')"> Carga CPU</label>
+      <label class="checklist-item"><input type="checkbox" id="chk-ram" checked onchange="toggleWidget('card-ram')"> Memoria RAM</label>
+      <label class="checklist-item"><input type="checkbox" id="chk-model" checked onchange="toggleWidget('card-model')"> Modelo / RouterOS</label>
+      <label class="checklist-item"><input type="checkbox" id="chk-traffic" checked onchange="toggleWidget('section-traffic')"> Tráfico (Bajada/Subida)</label>
+      <label class="checklist-item"><input type="checkbox" id="chk-clients" checked onchange="toggleWidget('section-clients')"> Sesiones Clientes</label>
+      <label class="checklist-item"><input type="checkbox" id="chk-health" checked onchange="toggleWidget('card-health')"> Temperatura / Voltaje</label>
+    </div>
+
     <!-- NAVEGACIÓN DE PESTAÑAS GENERADAS DINÁMICAMENTE -->
     <div class="tabs-nav" id="tabs-container">
-      <!-- Se llenan con JavaScript -->
       <button class="tab-btn btn-admin" onclick="showAdminTab(this)">🔒 Panel Admin</button>
     </div>
 
@@ -276,7 +322,7 @@
       <!-- RECURSOS -->
       <div class="section-title">📊 Recursos del Sistema</div>
       <div class="grid">
-        <div class="card">
+        <div class="card" id="card-cpu">
           <div class="card-title">Carga de CPU</div>
           <div class="value-unit">
             <span class="value color-cyan" id="mt-cpu">--</span>
@@ -288,7 +334,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="card-ram">
           <div class="card-title">Memoria Libre</div>
           <div class="value-unit">
             <span class="value color-green" id="mt-ram">--</span>
@@ -300,7 +346,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="card-model">
           <div class="card-title">Modelo / Placa</div>
           <div class="value-unit">
             <span class="value color-orange" style="font-size:1.8rem;" id="mt-model">--</span>
@@ -309,46 +355,61 @@
             <span>Versión ROS: <strong id="mt-version" style="color:var(--text-main)">--</strong></span>
           </div>
         </div>
+
+        <div class="card" id="card-health">
+          <div class="card-title">Estado / Temperatura</div>
+          <div class="value-unit">
+            <span class="value color-red" id="mt-temp">--</span>
+            <span class="unit">°C</span>
+          </div>
+          <div class="sub-info">
+            <span>Voltaje: <strong id="mt-volts" style="color:var(--text-main)">--</strong> V</span>
+          </div>
+        </div>
       </div>
 
       <!-- ANCHO DE BANDA -->
-      <div class="section-title">🚀 Tráfico de Red (Ancho de Banda)</div>
-      <div class="grid">
-        <div class="card">
-          <div class="card-title">Velocidad de Bajada (Download)</div>
-          <div class="value-unit">
-            <span class="value color-cyan" id="mt-rx">0.0</span>
-            <span class="unit">Mbps</span>
+      <div id="section-traffic">
+        <div class="section-title">🚀 Tráfico de Red (Ancho de Banda)</div>
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">Velocidad de Bajada (Download)</div>
+            <div class="value-unit">
+              <span class="value color-cyan" id="mt-rx">0.0</span>
+              <span class="unit">Mbps</span>
+            </div>
+            <div class="sub-info">
+              <span>Interfaz: <strong style="color:var(--text-main)">WAN (ether1)</strong></span>
+            </div>
           </div>
-          <div class="sub-info">
-            <span>Interfaz: <strong style="color:var(--text-main)">WAN (ether1)</strong></span>
-          </div>
-        </div>
 
-        <div class="card">
-          <div class="card-title">Velocidad de Subida (Upload)</div>
-          <div class="value-unit">
-            <span class="value color-orange" id="mt-tx">0.0</span>
-            <span class="unit">Mbps</span>
-          </div>
-          <div class="sub-info">
-            <span>Interfaz: <strong style="color:var(--text-main)">WAN (ether1)</strong></span>
+          <div class="card">
+            <div class="card-title">Velocidad de Subida (Upload)</div>
+            <div class="value-unit">
+              <span class="value color-orange" id="mt-tx">0.0</span>
+              <span class="unit">Mbps</span>
+            </div>
+            <div class="sub-info">
+              <span>Interfaz: <strong style="color:var(--text-main)">WAN (ether1)</strong></span>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- SESIONES -->
-      <div class="section-title">👥 Sesiones y Clientes Activos</div>
-      <div class="grid">
-        <div class="card">
-          <div class="card-title">Total Conexiones</div>
-          <div class="value-unit">
-            <span class="value color-green" id="mt-clients">--</span>
-            <span class="unit">activos</span>
-          </div>
-          <div class="sub-info">
-            <span>PPPoE: <strong id="mt-pppoe" style="color:var(--text-main)">--</strong></span>
-            <span>DHCP: <strong id="mt-dhcp" style="color:var(--text-main)">--</strong></span>
+      <div id="section-clients">
+        <div class="section-title">👥 Sesiones y Clientes Activos</div>
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">Total Conexiones</div>
+            <div class="value-unit">
+              <span class="value color-green" id="mt-clients">--</span>
+              <span class="unit">activos</span>
+            </div>
+            <div class="sub-info">
+              <span>PPPoE: <strong id="mt-pppoe" style="color:var(--text-main)">--</strong></span>
+              <span>DHCP: <strong id="mt-dhcp" style="color:var(--text-main)">--</strong></span>
+            </div>
           </div>
         </div>
       </div>
@@ -397,15 +458,21 @@
     const BACKEND_URL = "https://mikrotik-backend-sv5v.onrender.com";
     let activeRouterId = null;
 
-    // Cargar la lista de routers desde Render
+    // Mostrar u Ocultar widgets mediante la checklist
+    function toggleWidget(elementId) {
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+
+    // Cargar lista de routers registrados
     async function loadRouters() {
       try {
         const res = await fetch(`${BACKEND_URL}/api/routers`);
         const routers = await res.json();
         
         const tabsContainer = document.getElementById('tabs-container');
-        
-        // Guardar el botón Admin
         const adminBtn = document.querySelector('.btn-admin');
         tabsContainer.innerHTML = '';
 
@@ -427,7 +494,7 @@
       }
     }
 
-    // Seleccionar router y mostrar sus datos
+    // Cambiar de pestaña entre Routers
     function selectRouter(id, name, btnElement) {
       activeRouterId = id;
 
@@ -440,7 +507,7 @@
       fetchRouterMetrics(id);
     }
 
-    // Mostrar formulario Admin
+    // Cambiar a la pestaña de Administrador
     function showAdminTab(btnElement) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btnElement.classList.add('active');
@@ -449,7 +516,7 @@
       document.getElementById('admin-view').classList.add('active');
     }
 
-    // Consultar métricas del router seleccionado
+    // Consultar métricas del router activo
     async function fetchRouterMetrics(routerId) {
       if (!routerId) return;
 
@@ -459,21 +526,23 @@
         
         const data = await res.json();
 
-        document.getElementById('mt-cpu').textContent = data.resources.cpuLoad || '0';
-        document.getElementById('mt-uptime').textContent = data.resources.uptime || '--';
-        document.getElementById('mt-ram').textContent = data.resources.freeMemory || '0';
-        document.getElementById('mt-ram-total').textContent = data.resources.totalMemory || '0';
-        document.getElementById('mt-board').textContent = data.resources.boardName || 'MikroTik';
-        document.getElementById('mt-model').textContent = data.resources.boardName || 'RouterOS';
-        document.getElementById('mt-version').textContent = data.resources.version || 'v7.x';
+        document.getElementById('mt-cpu').textContent = data.cpuLoad || '0';
+        document.getElementById('mt-uptime').textContent = data.uptime || '--';
+        document.getElementById('mt-ram').textContent = data.freeMemoryMb || '0';
+        document.getElementById('mt-ram-total').textContent = data.totalMemoryMb || '0';
+        document.getElementById('mt-board').textContent = data.identity || 'MikroTik';
+        document.getElementById('mt-model').textContent = data.identity || 'RouterOS';
+        document.getElementById('mt-version').textContent = data.version || 'v7.x';
 
         document.getElementById('mt-rx').textContent = data.traffic ? data.traffic.rxMbps : '0.0';
         document.getElementById('mt-tx').textContent = data.traffic ? data.traffic.txMbps : '0.0';
 
-        const total = (data.sessions.pppActive || 0) + (data.sessions.dhcpActive || 0);
-        document.getElementById('mt-clients').textContent = total;
-        document.getElementById('mt-pppoe').textContent = data.sessions.pppActive || '0';
-        document.getElementById('mt-dhcp').textContent = data.sessions.dhcpActive || '0';
+        document.getElementById('mt-clients').textContent = data.clients ? data.clients.total : '0';
+        document.getElementById('mt-pppoe').textContent = data.clients ? data.clients.pppoe : '0';
+        document.getElementById('mt-dhcp').textContent = data.clients ? data.clients.dhcp : '0';
+
+        document.getElementById('mt-temp').textContent = data.temperature || 'N/A';
+        document.getElementById('mt-volts').textContent = data.voltage || 'N/A';
 
         const badge = document.getElementById('mt-status');
         badge.textContent = "Online";
@@ -489,7 +558,7 @@
       document.getElementById('last-update').textContent = `Actualizado: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} hs`;
     }
 
-    // Guardar nuevo router en Render
+    // Guardar un nuevo router
     async function handleAddRouter(e) {
       e.preventDefault();
       
