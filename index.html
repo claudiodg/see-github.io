@@ -82,6 +82,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      white-space: nowrap;
     }
 
     .tab-btn:hover {
@@ -257,22 +258,22 @@
   <div class="container">
     <header>
       <div>
-        <h1>Panel de Gestión MikroTik</h1>
+        <h1 id="header-title">Panel de Gestión MikroTik</h1>
         <p class="subtitle">Monitoreo de Red & Administración Multi-Router</p>
       </div>
       <p class="subtitle" id="last-update">Actualizado: --:-- hs</p>
     </header>
 
-    <!-- PESTAÑAS DE NAVEGACIÓN -->
+    <!-- NAVEGACIÓN DE PESTAÑAS GENERADAS DINÁMICAMENTE -->
     <div class="tabs-nav" id="tabs-container">
-      <button class="tab-btn active" onclick="switchTab('router-1')">⚙️ MikroTik Principal</button>
-      <button class="tab-btn btn-admin" onclick="switchTab('admin')">🔒 Panel Admin</button>
+      <!-- Se llenan con JavaScript -->
+      <button class="tab-btn btn-admin" onclick="showAdminTab(this)">🔒 Panel Admin</button>
     </div>
 
-    <!-- PESTAÑA: MIKROTIK PRINCIPAL -->
-    <div id="router-1" class="tab-content active">
+    <!-- VISTA PRINCIPAL DEL ROUTER (SE REGENERA SEGÚN EL SELECCIONADO) -->
+    <div id="router-view" class="tab-content active">
       
-      <!-- LÍNEA 1: RECURSOS DEL SISTEMA -->
+      <!-- RECURSOS -->
       <div class="section-title">📊 Recursos del Sistema</div>
       <div class="grid">
         <div class="card">
@@ -283,7 +284,7 @@
           </div>
           <div class="sub-info">
             <span>Uptime: <strong id="mt-uptime" style="color:var(--text-main)">--</strong></span>
-            <span id="mt-status" class="status-badge status-offline">Desconectado</span>
+            <span id="mt-status" class="status-badge status-offline">Cargando...</span>
           </div>
         </div>
 
@@ -310,7 +311,7 @@
         </div>
       </div>
 
-      <!-- LÍNEA 2: ANCHO DE BANDA EN TIEMPO REAL -->
+      <!-- ANCHO DE BANDA -->
       <div class="section-title">🚀 Tráfico de Red (Ancho de Banda)</div>
       <div class="grid">
         <div class="card">
@@ -321,7 +322,6 @@
           </div>
           <div class="sub-info">
             <span>Interfaz: <strong style="color:var(--text-main)">WAN (ether1)</strong></span>
-            <span>Paquetes RX: <strong id="mt-rx-pkt" style="color:var(--text-main)">--</strong></span>
           </div>
         </div>
 
@@ -333,12 +333,11 @@
           </div>
           <div class="sub-info">
             <span>Interfaz: <strong style="color:var(--text-main)">WAN (ether1)</strong></span>
-            <span>Paquetes TX: <strong id="mt-tx-pkt" style="color:var(--text-main)">--</strong></span>
           </div>
         </div>
       </div>
 
-      <!-- LÍNEA 3: SESIONES Y CLIENTES -->
+      <!-- SESIONES -->
       <div class="section-title">👥 Sesiones y Clientes Activos</div>
       <div class="grid">
         <div class="card">
@@ -348,28 +347,16 @@
             <span class="unit">activos</span>
           </div>
           <div class="sub-info">
-            <span>Sesiones PPPoE: <strong id="mt-pppoe" style="color:var(--text-main)">--</strong></span>
-            <span>Leases DHCP: <strong id="mt-dhcp" style="color:var(--text-main)">--</strong></span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Conexiones Hotspot</div>
-          <div class="value-unit">
-            <span class="value color-cyan" id="mt-hotspot">0</span>
-            <span class="unit">usuarios</span>
-          </div>
-          <div class="sub-info">
-            <span>Activos: <strong style="color:var(--text-main)">0</strong></span>
-            <span>Hosts: <strong style="color:var(--text-main)">0</strong></span>
+            <span>PPPoE: <strong id="mt-pppoe" style="color:var(--text-main)">--</strong></span>
+            <span>DHCP: <strong id="mt-dhcp" style="color:var(--text-main)">--</strong></span>
           </div>
         </div>
       </div>
 
     </div>
 
-    <!-- PESTAÑA: MODO ADMIN (ENLAZAR MIKROTIK) -->
-    <div id="admin" class="tab-content">
+    <!-- PESTAÑA: MODO ADMIN (FORMULARIO) -->
+    <div id="admin-view" class="tab-content">
       <div class="section-title">🔒 Enlazar un Nuevo Router MikroTik</div>
       
       <div class="admin-form">
@@ -399,7 +386,7 @@
             <input type="password" id="router-pass" placeholder="••••••••">
           </div>
 
-          <button type="submit" class="btn-submit">+ Guardar y Agregar Pestaña</button>
+          <button type="submit" class="btn-submit">+ Guardar y Enlazar en Render API</button>
         </form>
       </div>
     </div>
@@ -408,25 +395,70 @@
 
   <script>
     const BACKEND_URL = "https://mikrotik-backend-sv5v.onrender.com";
+    let activeRouterId = null;
 
-    // Moverse entre pestañas
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    // Cargar la lista de routers desde Render
+    async function loadRouters() {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/routers`);
+        const routers = await res.json();
+        
+        const tabsContainer = document.getElementById('tabs-container');
+        
+        // Guardar el botón Admin
+        const adminBtn = document.querySelector('.btn-admin');
+        tabsContainer.innerHTML = '';
 
-      document.getElementById(tabId).classList.add('active');
-      event.currentTarget.classList.add('active');
+        routers.forEach((router, index) => {
+          const btn = document.createElement('button');
+          btn.className = `tab-btn ${ (activeRouterId === router.id || (!activeRouterId && index === 0)) ? 'active' : '' }`;
+          btn.innerHTML = `⚙️ ${router.name}`;
+          btn.onclick = () => selectRouter(router.id, router.name, btn);
+          tabsContainer.appendChild(btn);
+        });
+
+        tabsContainer.appendChild(adminBtn);
+
+        if (routers.length > 0 && !activeRouterId) {
+          selectRouter(routers[0].id, routers[0].name, tabsContainer.firstChild);
+        }
+      } catch (err) {
+        console.error("Error al conectar con Render API:", err);
+      }
     }
 
-    // Obtener métricas de MikroTik desde el Backend en Render
-    async function fetchMikrotikMetrics() {
+    // Seleccionar router y mostrar sus datos
+    function selectRouter(id, name, btnElement) {
+      activeRouterId = id;
+
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      if (btnElement) btnElement.classList.add('active');
+
+      document.getElementById('admin-view').classList.remove('active');
+      document.getElementById('router-view').classList.add('active');
+
+      fetchRouterMetrics(id);
+    }
+
+    // Mostrar formulario Admin
+    function showAdminTab(btnElement) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+
+      document.getElementById('router-view').classList.remove('active');
+      document.getElementById('admin-view').classList.add('active');
+    }
+
+    // Consultar métricas del router seleccionado
+    async function fetchRouterMetrics(routerId) {
+      if (!routerId) return;
+
       try {
-        const res = await fetch(`${BACKEND_URL}/api/metrics/default`);
-        if (!res.ok) throw new Error("Error consultando el Router");
+        const res = await fetch(`${BACKEND_URL}/api/metrics/${routerId}`);
+        if (!res.ok) throw new Error("Error obteniendo métricas");
         
         const data = await res.json();
 
-        // Recursos
         document.getElementById('mt-cpu').textContent = data.resources.cpuLoad || '0';
         document.getElementById('mt-uptime').textContent = data.resources.uptime || '--';
         document.getElementById('mt-ram').textContent = data.resources.freeMemory || '0';
@@ -435,24 +467,21 @@
         document.getElementById('mt-model').textContent = data.resources.boardName || 'RouterOS';
         document.getElementById('mt-version').textContent = data.resources.version || 'v7.x';
 
-        // Ancho de banda (simulado/real desde API)
-        document.getElementById('mt-rx').textContent = (Math.random() * 15 + 5).toFixed(1);
-        document.getElementById('mt-tx').textContent = (Math.random() * 5 + 1).toFixed(1);
+        document.getElementById('mt-rx').textContent = data.traffic ? data.traffic.rxMbps : '0.0';
+        document.getElementById('mt-tx').textContent = data.traffic ? data.traffic.txMbps : '0.0';
 
-        // Clientes
         const total = (data.sessions.pppActive || 0) + (data.sessions.dhcpActive || 0);
         document.getElementById('mt-clients').textContent = total;
         document.getElementById('mt-pppoe').textContent = data.sessions.pppActive || '0';
         document.getElementById('mt-dhcp').textContent = data.sessions.dhcpActive || '0';
 
-        // Estado badge
         const badge = document.getElementById('mt-status');
         badge.textContent = "Online";
         badge.className = "status-badge status-online";
 
       } catch (err) {
         const badge = document.getElementById('mt-status');
-        badge.textContent = "Standby/Offline";
+        badge.textContent = "Standby/Error";
         badge.className = "status-badge status-offline";
       }
 
@@ -460,36 +489,43 @@
       document.getElementById('last-update').textContent = `Actualizado: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} hs`;
     }
 
-    // Agregar nuevo MikroTik desde el panel admin
-    function handleAddRouter(e) {
+    // Guardar nuevo router en Render
+    async function handleAddRouter(e) {
       e.preventDefault();
-      const name = document.getElementById('router-name').value;
       
-      const tabId = 'tab-' + Date.now();
+      const payload = {
+        name: document.getElementById('router-name').value,
+        host: document.getElementById('router-ip').value,
+        port: parseInt(document.getElementById('router-port').value),
+        user: document.getElementById('router-user').value,
+        pass: document.getElementById('router-pass').value
+      };
 
-      // Crear nueva pestaña en la barra superior
-      const tabsNav = document.getElementById('tabs-container');
-      const newTabBtn = document.createElement('button');
-      newTabBtn.className = 'tab-btn';
-      newTabBtn.innerHTML = `⚙️ ${name}`;
-      newTabBtn.onclick = (event) => switchTab(tabId);
-      tabsNav.insertBefore(newTabBtn, document.querySelector('.btn-admin'));
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/routers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-      // Clonar estructura para el nuevo router
-      const container = document.querySelector('.container');
-      const newTabContent = document.createElement('div');
-      newTabContent.id = tabId;
-      newTabContent.className = 'tab-content';
-      newTabContent.innerHTML = `<div class="section-title">📡 Monitoreando ${name}</div><p class="subtitle">Conectando con la API de MikroTik RouterOS...</p>`;
-      
-      container.appendChild(newTabContent);
-
-      alert(`Router "${name}" agregado con éxito.`);
-      document.getElementById('add-mikrotik-form').reset();
+        if (res.ok) {
+          const newRouter = await res.json();
+          alert(`Router "${newRouter.name}" guardado exitosamente.`);
+          document.getElementById('add-mikrotik-form').reset();
+          activeRouterId = newRouter.id;
+          await loadRouters();
+        } else {
+          alert("Error al guardar en el servidor.");
+        }
+      } catch (err) {
+        alert("No se pudo conectar con el backend en Render.");
+      }
     }
 
-    fetchMikrotikMetrics();
-    setInterval(fetchMikrotikMetrics, 5000);
+    loadRouters();
+    setInterval(() => {
+      if (activeRouterId) fetchRouterMetrics(activeRouterId);
+    }, 5000);
   </script>
 </body>
 </html>
