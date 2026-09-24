@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Admin MikroTik - Multi Router</title>
-  <!-- Chart.js CDN para el gráfico temporal XY -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -36,7 +35,7 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .section-title { font-size: 1.1rem; font-weight: 600; margin: 24px 0 12px 0; color: var(--cyan); display: flex; justify-content: space-between; align-items: center; }
+    .section-title { font-size: 1.1rem; font-weight: 600; margin: 24px 0 12px 0; color: var(--cyan); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 
     .card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
@@ -52,9 +51,10 @@
     .color-green { color: var(--green); }
     .color-red { color: var(--red); }
 
-    .chart-container { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-top: 12px; position: relative; height: 320px; }
-    
-    .time-select { background-color: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 10px; font-size: 0.85rem; outline: none; cursor: pointer; }
+    .controls-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .time-select, .date-input { background-color: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; padding: 5px 10px; font-size: 0.85rem; outline: none; cursor: pointer; }
+
+    .chart-container { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-top: 12px; position: relative; height: 350px; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 10px; background-color: var(--card-bg); border-radius: 8px; overflow: hidden; }
     th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
@@ -79,7 +79,7 @@
         <h1>Panel de Gestión MikroTik</h1>
         <p class="subtitle">Monitoreo Avanzado & Administración Multi-Router</p>
       </div>
-      <p class="subtitle" id="last-update">Actualizado: --:-- hs</p>
+      <p class="subtitle" id="last-update">Actualizado: --/--/---- --:--:--</p>
     </header>
 
     <!-- PESTAÑAS (TABS) -->
@@ -152,14 +152,21 @@
       <div id="section-traffic">
         <div class="section-title">
           <span>🚀 Tráfico de Ancho de Banda (Tiempo Real)</span>
-          <div>
-            <label for="time-window" class="subtitle">Ventana Temporal: </label>
-            <select id="time-window" class="time-select" onchange="updateTimeWindow()">
-              <option value="12">1 Minuto</option>
-              <option value="60" selected>5 Minutos</option>
-              <option value="180">15 Minutos</option>
-              <option value="360">30 Minutos</option>
+          
+          <div class="controls-group">
+            <label for="time-window" class="subtitle">Ventana Temporal:</label>
+            <select id="time-window" class="time-select" onchange="handleWindowChange()">
+              <option value="12">Últimos 1 Minuto</option>
+              <option value="60" selected>Últimos 5 Minutos</option>
+              <option value="180">Últimos 15 Minutos</option>
+              <option value="720">Últimas 1 Hora</option>
+              <option value="4320">Últimas 6 Horas</option>
+              <option value="17280">Últimas 24 Horas (1 Día)</option>
+              <option value="120960">Últimos 7 Días</option>
+              <option value="custom">Filtrar por Fecha Específica</option>
             </select>
+
+            <input type="date" id="filter-date" class="date-input" style="display:none" onchange="filterDataByDate()">
           </div>
         </div>
 
@@ -180,7 +187,7 @@
           </div>
         </div>
 
-        <!-- GRÁFICO XY CONTINUO -->
+        <!-- GRÁFICO XY CONTINUO CON FECHA Y HORA -->
         <div class="chart-container">
           <canvas id="trafficChart"></canvas>
         </div>
@@ -290,14 +297,17 @@
     let activeRouterId = null;
     let isAdminOpen = false;
     let trafficChart = null;
-    let maxDataPoints = 60; // 5 minutos por defecto (cada 5s)
+    
+    // Almacenamiento local de histórico de tráfico con Fecha y Hora completas
+    let historyTrafficData = []; 
+    let maxDataPoints = 60;
 
     function toggleWidget(id) {
       const el = document.getElementById(id);
       if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
     }
 
-    // Inicializar Gráfico Chart.js
+    // Inicializar Gráfico Chart.js con fecha y hora completa
     function initChart() {
       const ctx = document.getElementById('trafficChart').getContext('2d');
       trafficChart = new Chart(ctx, {
@@ -329,7 +339,7 @@
           scales: {
             x: {
               grid: { color: '#262c36' },
-              ticks: { color: '#8b949e', maxRotation: 0 }
+              ticks: { color: '#8b949e', maxRotation: 45, autoSkip: true, maxTicksLimit: 12 }
             },
             y: {
               beginAtZero: true,
@@ -338,31 +348,80 @@
             }
           },
           plugins: {
-            legend: { labels: { color: '#f0f4f8' } }
+            legend: { labels: { color: '#f0f4f8' } },
+            tooltip: {
+              callbacks: {
+                title: function(context) {
+                  return 'Fecha y Hora: ' + context[0].label;
+                }
+              }
+            }
           }
         }
       });
     }
 
-    function updateTimeWindow() {
+    function handleWindowChange() {
       const select = document.getElementById('time-window');
-      maxDataPoints = parseInt(select.value);
+      const dateInput = document.getElementById('filter-date');
+
+      if (select.value === 'custom') {
+        dateInput.style.display = 'inline-block';
+      } else {
+        dateInput.style.display = 'none';
+        maxDataPoints = parseInt(select.value);
+        renderFilteredChart();
+      }
     }
 
-    function addChartData(timeLabel, rx, tx) {
-      if (!trafficChart) return;
-      
-      trafficChart.data.labels.push(timeLabel);
-      trafficChart.data.datasets[0].data.push(rx);
-      trafficChart.data.datasets[1].data.push(tx);
+    function addTrafficRecord(rx, tx) {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const fullLabel = `${dateStr} ${timeStr}`;
 
-      while (trafficChart.data.labels.length > maxDataPoints) {
-        trafficChart.data.labels.shift();
-        trafficChart.data.datasets[0].data.shift();
-        trafficChart.data.datasets[1].data.shift();
+      const record = {
+        timestamp: now.getTime(),
+        dateStr: dateStr,
+        isoDate: now.toISOString().split('T')[0],
+        fullLabel: fullLabel,
+        rx: rx,
+        tx: tx
+      };
+
+      historyTrafficData.push(record);
+
+      // Mantener registro amplio (hasta 7 días de muestras de 5s = ~120,960)
+      if (historyTrafficData.length > 120960) {
+        historyTrafficData.shift();
       }
 
+      renderFilteredChart();
+    }
+
+    function renderFilteredChart() {
+      if (!trafficChart) return;
+
+      const selectValue = document.getElementById('time-window').value;
+      let filteredData = [];
+
+      if (selectValue === 'custom') {
+        const selectedDate = document.getElementById('filter-date').value;
+        if (!selectedDate) return;
+        filteredData = historyTrafficData.filter(item => item.isoDate === selectedDate);
+      } else {
+        const points = parseInt(selectValue);
+        filteredData = historyTrafficData.slice(-points);
+      }
+
+      trafficChart.data.labels = filteredData.map(item => item.fullLabel);
+      trafficChart.data.datasets[0].data = filteredData.map(item => item.rx);
+      trafficChart.data.datasets[1].data = filteredData.map(item => item.tx);
       trafficChart.update();
+    }
+
+    function filterDataByDate() {
+      renderFilteredChart();
     }
 
     async function loadRouters() {
@@ -399,7 +458,6 @@
       fetchRouterMetrics(id);
     }
 
-    // Alternar vista del Panel Admin sin perder navegación
     function toggleAdminTab() {
       const adminBtn = document.getElementById('btn-admin-toggle');
       
@@ -408,14 +466,6 @@
         document.getElementById('admin-view').classList.remove('active');
         document.getElementById('router-view').classList.add('active');
         adminBtn.classList.remove('active');
-        
-        // Reactivar pestaña activa
-        const tabs = document.querySelectorAll('.tab-btn');
-        tabs.forEach(t => {
-          if (t.textContent.includes('⚙️') && t.classList.contains('active-router')) {
-            t.classList.add('active');
-          }
-        });
       } else {
         isAdminOpen = true;
         document.getElementById('router-view').classList.remove('active');
@@ -452,8 +502,7 @@
         document.getElementById('mt-rx').textContent = rx.toFixed(2);
         document.getElementById('mt-tx').textContent = tx.toFixed(2);
 
-        const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        addChartData(timeNow, rx, tx);
+        addTrafficRecord(rx, tx);
 
         // Wi-Fi
         const wifiContainer = document.getElementById('wifi-cards-container');
@@ -496,7 +545,7 @@
       } catch (err) { console.error(err); }
 
       const now = new Date();
-      document.getElementById('last-update').textContent = `Actualizado: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')} hs`;
+      document.getElementById('last-update').textContent = `Actualizado: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
     }
 
     async function handleAddRouter(e) {
